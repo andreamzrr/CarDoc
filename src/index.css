@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --color-brand: #00357A;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+@layer base {
+  :root {
+    --brand: #00357A;
+    --brand-light: #004da6;
+  }
+}
+
+@layer utilities {
+  .animate-shimmer {
+    animation: shimmer 2.5s infinite linear;
+  }
+  .pulse-ring {
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .text-glow {
+    text-shadow: 0 0 20px rgba(0, 53, 122, 0.3), 0 0 40px rgba(0, 53, 122, 0.1);
+  }
+  .brutalist-border {
+    border: 3px solid var(--color-brand);
+    box-shadow: 6px 6px 0px 0px rgba(0, 53, 122, 0.1);
+  }
+}

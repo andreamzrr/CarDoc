@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitives
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(ownerId) { return isSignedIn() && request.auth.uid == ownerId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Pillar 2: Validation Blueprints
+    function isValidVehicle(data) {
+      return data.keys().hasAll(['ownerId', 'year', 'make', 'model', 'mileage', 'createdAt', 'lastUpdated'])
+        && data.keys().size() <= 11
+        && isOwner(data.ownerId)
+        && data.year is string && data.year.size() <= 4
+        && data.make is string && data.make.size() <= 50
+        && data.model is string && data.model.size() <= 50
+        && data.mileage is int && data.mileage >= 0
+        && data.createdAt == request.time
+        && data.lastUpdated == request.time
+        && (data.get('vin', '') is string);
+    }
+
+    function isValidLog(data, vehicleId) {
+      return data.keys().hasAll(['vehicleId', 'serviceName', 'mileage', 'date'])
+        && data.keys().size() <= 10
+        && data.vehicleId == vehicleId
+        && data.serviceName is string && data.serviceName.size() <= 100
+        && data.mileage is int && data.mileage >= 0
+        && data.date is timestamp;
+    }
+
+    // Vehicle Security
+    match /vehicles/{vehicleId} {
+      allow get: if isOwner(existing().ownerId) && isValidId(vehicleId);
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      
+      allow create: if isSignedIn()
+        && isValidId(vehicleId)
+        && isValidVehicle(incoming());
+
+      allow update: if isOwner(existing().ownerId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().lastUpdated == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['mileage', 'photoUrl', 'lastUpdated', 'vin'])
+        );
+
+      allow delete: if isOwner(existing().ownerId);
+
+      // Subcollection: Logs
+      match /logs/{logId} {
+        // Pillar 1: Relational Sync - access to logs depends on vehicle ownership
+        allow get, list: if isOwner(get(/databases/$(database)/documents/vehicles/$(vehicleId)).data.ownerId);
+        
+        allow create: if isOwner(get(/databases/$(database)/documents/vehicles/$(vehicleId)).data.ownerId)
+          && isValidId(logId)
+          && isValidLog(incoming(), vehicleId);
+
+        allow update, delete: if isOwner(get(/databases/$(database)/documents/vehicles/$(vehicleId)).data.ownerId);
+      }
+    }
+  }
+}

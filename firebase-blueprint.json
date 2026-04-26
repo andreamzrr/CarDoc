@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "Vehicle": {
+      "title": "Vehicle",
+      "description": "Represents a car in the user's virtual garage.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the vehicle" },
+        "ownerId": { "type": "string", "description": "UID of the vehicle owner" },
+        "year": { "type": "string", "description": "Model year" },
+        "make": { "type": "string", "description": "Manufacturer" },
+        "model": { "type": "string", "description": "Model name" },
+        "mileage": { "type": "integer", "description": "Current mileage" },
+        "vin": { "type": "string", "description": "Last few digits of VIN for identification" },
+        "photoUrl": { "type": "string", "description": "URL to vehicle thumbnail" },
+        "lastUpdated": { "type": "string", "format": "date-time", "description": "Last sync time" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["ownerId", "year", "make", "model", "mileage"]
+    },
+    "MaintenanceLog": {
+      "title": "Maintenance Log",
+      "description": "Record of a service performed on a vehicle.",
+      "type": "object",
+      "properties": {
+        "vehicleId": { "type": "string", "description": "Reference to the vehicle" },
+        "serviceName": { "type": "string", "description": "Name of the service (e.g., Oil Change)" },
+        "mileage": { "type": "integer", "description": "Mileage at time of service" },
+        "date": { "type": "string", "format": "date-time", "description": "Service date" },
+        "notes": { "type": "string", "description": "Additional details" },
+        "cost": { "type": "number", "description": "Cost of parts/labor" }
+      },
+      "required": ["vehicleId", "serviceName", "mileage", "date"]
+    }
+  },
+  "firestore": {
+    "/vehicles/{vehicleId}": {
+      "schema": "Vehicle",
+      "description": "Documents for each car in the user's garage."
+    },
+    "/vehicles/{vehicleId}/logs/{logId}": {
+      "schema": "MaintenanceLog",
+      "description": "Historical maintenance records for a specific vehicle."
+    }
+  }
+}

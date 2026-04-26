@@ -1,0 +1,10 @@
+{
+  "name": "CarDoc - AI Mechanic",
+  "description": "A professional AI-powered car mechanic assistant for diagnosis, repair guides, and fleet maintenance.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
